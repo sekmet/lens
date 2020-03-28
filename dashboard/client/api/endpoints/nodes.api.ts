@@ -109,6 +109,11 @@ export class Node extends KubeObject {
     const roleLabels = Object.keys(this.metadata.labels).filter(key =>
       key.includes("node-role.kubernetes.io")
     ).map(key => key.match(/([^/]+$)/)[0]) // all after last slash
+
+    if (this.metadata.labels["kubernetes.io/role"] != undefined) {
+      roleLabels.push(this.metadata.labels["kubernetes.io/role"])
+    }
+
     return roleLabels.join(", ")
   }
 
@@ -143,6 +148,15 @@ export class Node extends KubeObject {
 
   getKubeletVersion() {
     return this.status.nodeInfo.kubeletVersion;
+  }
+
+  getOperatingSystem(): string {
+    const label = this.getLabels().find(label => label.startsWith("kubernetes.io/os="))
+    if (label) {
+      return label.split("=", 2)[1]
+    }
+
+    return "linux"
   }
 
   isUnschedulable() {
